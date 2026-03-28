@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Case Chronology | Law Firm</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:   #1a2744;
+      --navy2:  #243258;
+      --gold:   #c8a84b;
+      --gold2:  #e0c97a;
+      --bg:     #f4f5f7;
+      --white:  #ffffff;
+      --border: #d1d5db;
+      --text:   #1f2937;
+      --muted:  #6b7280;
+      --red:    #dc2626;
+      --green:  #16a34a;
+      --blue:   #2563eb;
+      --radius: 6px;
+      --shadow: 0 1px 4px rgba(0,0,0,.12);
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .logo span { color: var(--gold); }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ── Buttons ── */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius);
+      font-size: .875rem;
+      font-weight: 500;
+      padding: 7px 14px;
+      transition: background .15s, opacity .15s;
+    }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary   { background: var(--gold); color: var(--navy); }
+    .btn-primary:hover:not(:disabled)   { background: var(--gold2); }
+    .btn-secondary { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,.35); }
+    .btn-secondary:hover { background: rgba(255,255,255,.1); }
+    .btn-danger    { background: var(--red); color: #fff; }
+    .btn-danger:hover:not(:disabled) { opacity: .85; }
+    .btn-outline   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--border); }
+    .btn-icon      { background: transparent; padding: 5px 8px; color: var(--muted); font-size: 1rem; }
+    .btn-icon:hover { color: var(--text); }
+    .btn-sm        { padding: 4px 10px; font-size: .8rem; }
+
+    /* ── Layout ── */
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px 20px; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .toolbar-left  { display: flex; gap: 10px; align-items: center; flex: 1; flex-wrap: wrap; }
+    .toolbar-right { display: flex; gap: 8px; align-items: center; }
+
+    /* ── Case Selector ── */
+    .case-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px 10px;
+    }
+    .case-selector label { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+    .case-selector select {
+      border: none;
+      background: transparent;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--navy);
+      cursor: pointer;
+      min-width: 160px;
+      outline: none;
+    }
+
+    /* ── Search & Filter ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .filter-bar input, .filter-bar select {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      font-size: .875rem;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+    }
+    .filter-bar input:focus, .filter-bar select:focus { border-color: var(--gold); }
+    .filter-label { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stat-card .stat-value { font-size: 1.4rem; font-weight: 700; color: var(--navy); }
+    .stat-card .stat-label { font-size: .75rem; color: var(--muted); }
+
+    /* ── Timeline Table ── */
+    .table-wrap {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--navy); color: var(--white); }
+    thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+    thead th:hover { background: var(--navy2); }
+    thead th .sort-icon { margin-left: 4px; opacity: .5; }
+    thead th.sorted .sort-icon { opacity: 1; color: var(--gold); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8f9fb; }
+    tbody td { padding: 11px 14px; font-size: .875rem; vertical-align: top; }
+    .td-date    { white-space: nowrap; font-weight: 600; color: var(--navy); min-width: 100px; }
+    .td-time    { white-space: nowrap; color: var(--muted); font-size: .8rem; min-width: 70px; }
+    .td-desc    { max-width: 420px; line-height: 1.5; }
+    .td-party   { color: var(--muted); font-size: .8rem; }
+    .td-source  { font-size: .8rem; color: var(--blue); }
+    .td-actions { white-space: nowrap; text-align: right; }
+    .td-actions button { margin-left: 4px; }
+    .entry-number { color: var(--muted); font-size: .75rem; font-weight: 400; }
+
+    /* ── Category Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .badge-correspondence   { background: #dbeafe; color: #1d4ed8; }
+    .badge-pleading         { background: #ede9fe; color: #6d28d9; }
+    .badge-hearing          { background: #fef3c7; color: #92400e; }
+    .badge-deposition       { background: #d1fae5; color: #065f46; }
+    .badge-contract         { background: #fce7f3; color: #9d174d; }
+    .badge-discovery        { background: #ffedd5; color: #9a3412; }
+    .badge-order            { background: #e0f2fe; color: #0369a1; }
+    .badge-meeting          { background: #f0fdf4; color: #166534; }
+    .badge-payment          { background: #fdf4ff; color: #7e22ce; }
+    .badge-other            { background: #f3f4f6; color: #4b5563; }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 1.1rem; margin-bottom: 6px; color: var(--text); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--white);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    .modal-header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 16px 20px;
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h2 { font-size: 1rem; font-weight: 700; }
+    .modal-header button { background: transparent; color: rgba(255,255,255,.7); font-size: 1.3rem; padding: 2px 6px; }
+    .modal-header button:hover { color: var(--white); }
+    .modal-body { padding: 24px 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid .span2 { grid-column: span 2; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: .8rem; font-weight: 600; color: var(--navy); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      font-size: .875rem;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,168,75,.15); }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* ── Case Modal ── */
+    .case-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .case-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+    }
+    .case-item-name { font-weight: 600; font-size: .9rem; }
+    .case-item-meta { font-size: .75rem; color: var(--muted); }
+
+    /* ── Print ── */
+    @media print {
+      header, .toolbar, .filter-bar, .stats-bar, .td-actions, .btn-icon { display: none !important; }
+      body { background: white; }
+      .table-wrap { box-shadow: none; border: none; }
+      thead { background: #1a2744 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .container { padding: 0; max-width: 100%; }
+      .print-title { display: block !important; }
+    }
+    .print-title { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M3 6h18M3 12h18M3 18h18"/><circle cx="12" cy="12" r="10" stroke="none" fill="none"/>
+      <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M8 12l2 2 4-4" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span>LEX</span>CHRONOS
+  </div>
+  <div class="header-actions">
+    <button class="btn-secondary" onclick="openCasesModal()">&#128193; Manage Cases</button>
+    <button class="btn-primary" onclick="openEntryModal()">+ Add Entry</button>
+    <button class="btn-secondary btn-sm" onclick="window.print()" title="Print">&#128438; Print</button>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="container">
+
+  <!-- Print Title -->
+  <div class="print-title">
+    <h1 id="printTitle" style="font-size:1.4rem;margin-bottom:4px;color:#1a2744"></h1>
+    <p id="printDate" style="font-size:.85rem;color:#6b7280;margin-bottom:16px"></p>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="case-selector">
+        <label>Case:</label>
+        <select id="caseSelect" onchange="onCaseChange()"></select>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn-outline btn-sm" onclick="exportCSV()">&#8659; Export CSV</button>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <input type="text"   id="searchInput"    placeholder="Search descriptions, parties, sources…" style="min-width:220px" oninput="renderTable()" />
+    <select id="catFilter" onchange="renderTable()">
+      <option value="">All Categories</option>
+      <option>Correspondence</option><option>Pleading</option><option>Hearing</option>
+      <option>Deposition</option><option>Contract</option><option>Discovery</option>
+      <option>Order</option><option>Meeting</option><option>Payment</option><option>Other</option>
+    </select>
+    <span class="filter-label">From:</span>
+    <input type="date" id="dateFrom" onchange="renderTable()" />
+    <span class="filter-label">To:</span>
+    <input type="date" id="dateTo"   onchange="renderTable()" />
+    <button class="btn-outline btn-sm" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="chronologyTable">
+      <thead>
+        <tr>
+          <th onclick="sortBy('date')"        data-col="date"    class="sorted">#&nbsp; Date <span class="sort-icon">&#9650;</span></th>
+          <th onclick="sortBy('time')"        data-col="time">Time <span class="sort-icon">&#9650;</span></th>
+          <th onclick="sortBy('category')"    data-col="category">Category <span class="sort-icon">&#9650;</span></th>
+          <th onclick="sortBy('description')" data-col="description">Description <span class="sort-icon">&#9650;</span></th>
+          <th onclick="sortBy('parties')"     data-col="parties">Parties <span class="sort-icon">&#9650;</span></th>
+          <th onclick="sortBy('source')"      data-col="source">Source / Doc Ref <span class="sort-icon">&#9650;</span></th>
+          <th class="no-print">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Entry Modal -->
+<div class="modal-overlay hidden" id="entryModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="entryModalTitle">Add Chronology Entry</h2>
+      <button onclick="closeEntryModal()">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="eDate">Date <span style="color:var(--red)">*</span></label>
+          <input type="date" id="eDate" required />
+        </div>
+        <div class="form-group">
+          <label for="eTime">Time (optional)</label>
+          <input type="time" id="eTime" />
+        </div>
+        <div class="form-group">
+          <label for="eCategory">Category <span style="color:var(--red)">*</span></label>
+          <select id="eCategory">
+            <option>Correspondence</option><option>Pleading</option><option>Hearing</option>
+            <option>Deposition</option><option>Contract</option><option>Discovery</option>
+            <option>Order</option><option>Meeting</option><option>Payment</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="eParties">Parties Involved</label>
+          <input type="text" id="eParties" placeholder="e.g. Smith v. Jones" />
+        </div>
+        <div class="form-group span2">
+          <label for="eDesc">Description <span style="color:var(--red)">*</span></label>
+          <textarea id="eDesc" placeholder="Describe the event in detail…"></textarea>
+        </div>
+        <div class="form-group span2">
+          <label for="eSource">Source / Document Reference</label>
+          <input type="text" id="eSource" placeholder="e.g. Exhibit A, Bates 0001-0010, Email dated 2024-03-15" />
+        </div>
+        <div class="form-group span2">
+          <label for="eNotes">Internal Notes (not printed)</label>
+          <textarea id="eNotes" placeholder="Privileged notes, follow-up tasks…" style="min-height:60px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeEntryModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cases Modal -->
+<div class="modal-overlay hidden" id="casesModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Manage Cases</h2>
+      <button onclick="closeCasesModal()">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="case-list" id="caseList"></div>
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label for="newCaseName">New Case Name</label>
+          <input type="text" id="newCaseName" placeholder="e.g. Smith v. Jones, No. 2024-CV-0001" />
+        </div>
+        <div class="form-group">
+          <label for="newCaseClient">Client</label>
+          <input type="text" id="newCaseClient" placeholder="Client name" />
+        </div>
+        <div class="form-group">
+          <label for="newCaseNumber">File / Docket Number</label>
+          <input type="text" id="newCaseNumber" placeholder="e.g. 2024-CV-0001" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeCasesModal()">Close</button>
+      <button class="btn-primary" onclick="addCase()">Add Case</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header"><h2>Confirm Delete</h2><button onclick="closeConfirm()">&#10005;</button></div>
+    <div class="modal-body"><p id="confirmMsg" style="line-height:1.6"></p></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" id="confirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let state = JSON.parse(localStorage.getItem('lexChronos') || 'null') || {
+  cases: [
+    { id: 'c1', name: 'Smith v. Jones', client: 'John Smith', number: '2024-CV-0001' }
+  ],
+  entries: [
+    { id: 'e1', caseId: 'c1', date: '2024-01-15', time: '09:30', category: 'Correspondence',
+      description: 'Initial demand letter sent to opposing counsel via certified mail regarding breach of contract claims totaling $450,000.',
+      parties: 'Smith (Plaintiff), Jones (Defendant)', source: 'Exhibit A, Bates 0001-0003', notes: '' },
+    { id: 'e2', caseId: 'c1', date: '2024-02-08', time: '14:00', category: 'Meeting',
+      description: 'Intake meeting with client John Smith. Reviewed facts, gathered documents, and discussed litigation strategy.',
+      parties: 'Smith, Atty. Brown', source: 'Client File Note #1', notes: 'Follow up: request bank records' },
+    { id: 'e3', caseId: 'c1', date: '2024-03-01', time: '', category: 'Pleading',
+      description: 'Complaint filed in Superior Court. Causes of action: breach of contract, unjust enrichment, fraud.',
+      parties: 'Smith v. Jones', source: 'Docket No. 2024-CV-0001, Doc. 1', notes: '' },
+    { id: 'e4', caseId: 'c1', date: '2024-04-12', time: '10:00', category: 'Hearing',
+      description: 'Scheduling conference before Hon. M. Williams. Trial set for November 2024. Discovery cutoff August 2024.',
+      parties: 'Smith, Jones, Judge Williams', source: 'Scheduling Order, Doc. 15', notes: '' },
+    { id: 'e5', caseId: 'c1', date: '2024-06-20', time: '09:00', category: 'Deposition',
+      description: 'Deposition of Defendant Robert Jones. Duration: 4 hours. Key admissions regarding contract terms.',
+      parties: 'Jones (Deponent), Atty. Brown, Atty. Davis', source: 'Depo. Transcript, Exhibit D', notes: 'Review pp. 45-67 re: damages' },
+  ]
+};
+
+let editingEntryId = null;
+let sortCol = 'date';
+let sortAsc = true;
+let confirmCallback = null;
+
+// ── Persist ───────────────────────────────────────────────────────────────────
+function save() { localStorage.setItem('lexChronos', JSON.stringify(state)); }
+
+// ── IDs ───────────────────────────────────────────────────────────────────────
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+// ── Current Case ─────────────────────────────────────────────────────────────
+function currentCaseId() { return document.getElementById('caseSelect').value; }
+
+function currentCase() { return state.cases.find(c => c.id === currentCaseId()); }
+
+// ── Case Select ───────────────────────────────────────────────────────────────
+function populateCaseSelect() {
+  const sel = document.getElementById('caseSelect');
+  const prev = sel.value;
+  sel.innerHTML = state.cases.map(c =>
+    `<option value="${c.id}">${escHtml(c.name)}</option>`
+  ).join('');
+  if (prev && state.cases.find(c => c.id === prev)) sel.value = prev;
+}
+
+function onCaseChange() { renderTable(); updatePrintMeta(); }
+
+function updatePrintMeta() {
+  const c = currentCase();
+  if (!c) return;
+  document.getElementById('printTitle').textContent = `Case Chronology: ${c.name}`;
+  document.getElementById('printDate').textContent =
+    `Client: ${c.client || '—'}  |  File: ${c.number || '—'}  |  Printed: ${new Date().toLocaleDateString()}`;
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function getFiltered() {
+  const cid   = currentCaseId();
+  const q     = document.getElementById('searchInput').value.toLowerCase().trim();
+  const cat   = document.getElementById('catFilter').value;
+  const from  = document.getElementById('dateFrom').value;
+  const to    = document.getElementById('dateTo').value;
+
+  return state.entries.filter(e => {
+    if (e.caseId !== cid) return false;
+    if (cat  && e.category !== cat) return false;
+    if (from && e.date < from) return false;
+    if (to   && e.date > to)   return false;
+    if (q && !`${e.description} ${e.parties} ${e.source}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('catFilter').value   = '';
+  document.getElementById('dateFrom').value    = '';
+  document.getElementById('dateTo').value      = '';
+  renderTable();
+}
+
+// ── Sort ──────────────────────────────────────────────────────────────────────
+function sortBy(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.col === col);
+    const icon = th.querySelector('.sort-icon');
+    if (icon && th.dataset.col === col) icon.innerHTML = sortAsc ? '&#9650;' : '&#9660;';
+  });
+  renderTable();
+}
+
+function sorted(arr) {
+  return [...arr].sort((a, b) => {
+    let va = (a[sortCol] || '').toLowerCase();
+    let vb = (b[sortCol] || '').toLowerCase();
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ?  1 : -1;
+    return 0;
+  });
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function renderStats(entries) {
+  const cats = {};
+  entries.forEach(e => { cats[e.category] = (cats[e.category] || 0) + 1; });
+  const topCat = Object.entries(cats).sort((a,b) => b[1]-a[1])[0];
+  const dates = entries.map(e => e.date).sort();
+  const span = dates.length > 1
+    ? `${fmtDate(dates[0])} – ${fmtDate(dates[dates.length-1])}`
+    : dates[0] ? fmtDate(dates[0]) : '—';
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${entries.length}</div><div class="stat-label">Entries</div></div>
+    <div class="stat-card"><div class="stat-value">${Object.keys(cats).length}</div><div class="stat-label">Categories</div></div>
+    <div class="stat-card"><div class="stat-value">${topCat ? escHtml(topCat[0]) : '—'}</div><div class="stat-label">Most Common</div></div>
+    <div class="stat-card"><div class="stat-value" style="font-size:.95rem">${span}</div><div class="stat-label">Date Range</div></div>
+  `;
+}
+
+// ── Render Table ──────────────────────────────────────────────────────────────
+function renderTable() {
+  const filtered = getFiltered();
+  const rows     = sorted(filtered);
+  renderStats(filtered);
+  updatePrintMeta();
+
+  const tbody = document.getElementById('tableBody');
+  if (!rows.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="7">
+        <div class="empty-state">
+          <div class="empty-icon">&#128196;</div>
+          <h3>No entries found</h3>
+          <p>Add entries using the "+ Add Entry" button, or adjust your filters.</p>
+        </div>
+      </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((e, i) => `
+    <tr>
+      <td class="td-date"><span class="entry-number">${i+1}.&nbsp;</span>${fmtDate(e.date)}</td>
+      <td class="td-time">${e.time ? fmtTime(e.time) : '<span style="color:#d1d5db">—</span>'}</td>
+      <td><span class="badge badge-${e.category.toLowerCase()}">${escHtml(e.category)}</span></td>
+      <td class="td-desc">
+        ${escHtml(e.description)}
+        ${e.notes ? `<div style="margin-top:4px;font-size:.75rem;color:var(--muted);font-style:italic">&#128274; ${escHtml(e.notes)}</div>` : ''}
+      </td>
+      <td class="td-party">${escHtml(e.parties || '—')}</td>
+      <td class="td-source">${escHtml(e.source || '—')}</td>
+      <td class="td-actions">
+        <button class="btn-icon btn-sm" title="Edit" onclick="openEntryModal('${e.id}')">&#9998;</button>
+        <button class="btn-icon btn-sm" title="Delete" style="color:var(--red)" onclick="confirmDeleteEntry('${e.id}')">&#128465;</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[+m-1]} ${+day}, ${y}`;
+}
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+function escHtml(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Entry Modal ───────────────────────────────────────────────────────────────
+function openEntryModal(id) {
+  editingEntryId = id || null;
+  const modal = document.getElementById('entryModal');
+  document.getElementById('entryModalTitle').textContent =
+    id ? 'Edit Chronology Entry' : 'Add Chronology Entry';
+
+  if (id) {
+    const e = state.entries.find(x => x.id === id);
+    document.getElementById('eDate').value     = e.date;
+    document.getElementById('eTime').value     = e.time || '';
+    document.getElementById('eCategory').value = e.category;
+    document.getElementById('eParties').value  = e.parties || '';
+    document.getElementById('eDesc').value     = e.description;
+    document.getElementById('eSource').value   = e.source || '';
+    document.getElementById('eNotes').value    = e.notes || '';
+  } else {
+    document.getElementById('eDate').value     = '';
+    document.getElementById('eTime').value     = '';
+    document.getElementById('eCategory').value = 'Correspondence';
+    document.getElementById('eParties').value  = '';
+    document.getElementById('eDesc').value     = '';
+    document.getElementById('eSource').value   = '';
+    document.getElementById('eNotes').value    = '';
+  }
+  modal.classList.remove('hidden');
+  setTimeout(() => document.getElementById('eDate').focus(), 50);
+}
+
+function closeEntryModal() {
+  document.getElementById('entryModal').classList.add('hidden');
+  editingEntryId = null;
+}
+
+function saveEntry() {
+  const date = document.getElementById('eDate').value.trim();
+  const desc = document.getElementById('eDesc').value.trim();
+  if (!date) { alert('Date is required.'); return; }
+  if (!desc) { alert('Description is required.'); return; }
+
+  const entry = {
+    id:          editingEntryId || uid(),
+    caseId:      currentCaseId(),
+    date,
+    time:        document.getElementById('eTime').value,
+    category:    document.getElementById('eCategory').value,
+    parties:     document.getElementById('eParties').value.trim(),
+    description: desc,
+    source:      document.getElementById('eSource').value.trim(),
+    notes:       document.getElementById('eNotes').value.trim(),
+  };
+
+  if (editingEntryId) {
+    const idx = state.entries.findIndex(e => e.id === editingEntryId);
+    state.entries[idx] = entry;
+  } else {
+    state.entries.push(entry);
+  }
+  save();
+  closeEntryModal();
+  renderTable();
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+function confirmDeleteEntry(id) {
+  const e = state.entries.find(x => x.id === id);
+  document.getElementById('confirmMsg').textContent =
+    `Delete the entry dated ${fmtDate(e.date)}: "${e.description.slice(0,80)}…"? This cannot be undone.`;
+  confirmCallback = () => { deleteEntry(id); closeConfirm(); };
+  document.getElementById('confirmBtn').onclick = confirmCallback;
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+function deleteEntry(id) {
+  state.entries = state.entries.filter(e => e.id !== id);
+  save(); renderTable();
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.add('hidden');
+  confirmCallback = null;
+}
+
+// ── Cases Modal ───────────────────────────────────────────────────────────────
+function openCasesModal() {
+  renderCaseList();
+  document.getElementById('casesModal').classList.remove('hidden');
+}
+function closeCasesModal() {
+  document.getElementById('casesModal').classList.add('hidden');
+}
+
+function renderCaseList() {
+  document.getElementById('caseList').innerHTML = state.cases.map(c => {
+    const count = state.entries.filter(e => e.caseId === c.id).length;
+    return `
+      <div class="case-item">
+        <div>
+          <div class="case-item-name">${escHtml(c.name)}</div>
+          <div class="case-item-meta">${escHtml(c.client || '')} ${c.number ? '· '+escHtml(c.number) : ''} · ${count} entries</div>
+        </div>
+        <button class="btn-danger btn-sm" onclick="confirmDeleteCase('${c.id}')" ${state.cases.length===1?'disabled':''}>Delete</button>
+      </div>`;
+  }).join('');
+}
+
+function addCase() {
+  const name = document.getElementById('newCaseName').value.trim();
+  if (!name) { alert('Case name is required.'); return; }
+  const c = {
+    id:     uid(),
+    name,
+    client: document.getElementById('newCaseClient').value.trim(),
+    number: document.getElementById('newCaseNumber').value.trim(),
+  };
+  state.cases.push(c);
+  save();
+  populateCaseSelect();
+  document.getElementById('caseSelect').value = c.id;
+  onCaseChange();
+  document.getElementById('newCaseName').value   = '';
+  document.getElementById('newCaseClient').value = '';
+  document.getElementById('newCaseNumber').value = '';
+  renderCaseList();
+}
+
+function confirmDeleteCase(id) {
+  const c = state.cases.find(x => x.id === id);
+  const count = state.entries.filter(e => e.caseId === id).length;
+  document.getElementById('confirmMsg').textContent =
+    `Delete case "${c.name}" and its ${count} entries? This cannot be undone.`;
+  confirmCallback = () => {
+    state.cases   = state.cases.filter(x => x.id !== id);
+    state.entries = state.entries.filter(e => e.caseId !== id);
+    save();
+    populateCaseSelect();
+    onCaseChange();
+    renderCaseList();
+    closeCasesModal();
+    closeConfirm();
+  };
+  document.getElementById('confirmBtn').onclick = confirmCallback;
+  document.getElementById('confirmModal').classList.remove('hidden');
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = sorted(getFiltered());
+  const c = currentCase();
+  const cols = ['#','Date','Time','Category','Description','Parties','Source/Doc Ref'];
+  const lines = [
+    `"Case: ${(c.name||'').replace(/"/g,'""')}"`,
+    '',
+    cols.map(h => `"${h}"`).join(','),
+    ...rows.map((e, i) =>
+      [i+1, e.date, e.time, e.category, e.description, e.parties, e.source]
+        .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+        .join(',')
+    )
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `chronology-${(c.name||'case').replace(/\s+/g,'-')}.csv`
+  });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeEntryModal();
+    closeCasesModal();
+    closeConfirm();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+populateCaseSelect();
+renderTable();
+</script>
+</body>
+</html>
