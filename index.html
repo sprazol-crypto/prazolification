@@ -309,7 +309,44 @@
       .print-title { display: block !important; }
     }
     .print-title { display: none; }
+
+    /* ── Case Summary Section ── */
+    .case-summary-section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .case-summary-section h3 {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--gold);
+      display: inline-block;
+    }
+    .summary-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .summary-meta span { font-size: .8rem; color: var(--muted); }
+    .summary-meta strong { color: var(--text); }
+    .summary-text {
+      font-size: .875rem;
+      line-height: 1.65;
+      color: var(--text);
+      white-space: pre-wrap;
+      margin: 0;
+    }
   </style>
+  <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
 </head>
 <body>
 
@@ -349,6 +386,7 @@
     </div>
     <div class="toolbar-right">
       <button class="btn-outline btn-sm" onclick="exportCSV()">&#8659; Export CSV</button>
+      <button class="btn-outline btn-sm" onclick="exportWord()">&#8659; Export Word</button>
     </div>
   </div>
 
@@ -367,6 +405,18 @@
     <span class="filter-label">To:</span>
     <input type="date" id="dateTo"   onchange="renderTable()" />
     <button class="btn-outline btn-sm" onclick="clearFilters()">Clear</button>
+  </div>
+
+  <!-- Case Summary -->
+  <div class="case-summary-section" id="caseSummarySection" style="display:none">
+    <h3>Case Overview</h3>
+    <div class="summary-meta">
+      <span><strong>Client:</strong> <span id="sumClient"></span></span>
+      <span><strong>File Ref:</strong> <span id="sumNumber"></span></span>
+      <span id="sumMatterTypeWrap" style="display:none"><strong>Matter Type:</strong> <span id="sumMatterType"></span></span>
+      <span id="sumDoiWrap" style="display:none"><strong>DOI/DOA:</strong> <span id="sumDoi"></span></span>
+    </div>
+    <p class="summary-text" id="caseSummaryText"></p>
   </div>
 
   <!-- Stats -->
@@ -463,6 +513,18 @@
           <label for="newCaseNumber">File / Docket Number</label>
           <input type="text" id="newCaseNumber" placeholder="e.g. 2024-CV-0001" />
         </div>
+        <div class="form-group">
+          <label for="newCaseMatterType">Matter Type</label>
+          <input type="text" id="newCaseMatterType" placeholder="e.g. VIC CTP, Personal Injury" />
+        </div>
+        <div class="form-group">
+          <label for="newCaseDoi">DOI / DOA</label>
+          <input type="date" id="newCaseDoi" />
+        </div>
+        <div class="form-group span2">
+          <label for="newCaseSummary">Injuries &amp; Treatment Overview</label>
+          <textarea id="newCaseSummary" placeholder="Describe the incident, injuries, treatment progress, and current status…" style="min-height:120px"></textarea>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -535,7 +597,7 @@ function populateCaseSelect() {
   if (prev && state.cases.find(c => c.id === prev)) sel.value = prev;
 }
 
-function onCaseChange() { renderTable(); updatePrintMeta(); }
+function onCaseChange() { renderTable(); updatePrintMeta(); updateCaseSummary(); }
 
 function updatePrintMeta() {
   const c = currentCase();
@@ -779,19 +841,25 @@ function addCase() {
   const name = document.getElementById('newCaseName').value.trim();
   if (!name) { alert('Case name is required.'); return; }
   const c = {
-    id:     uid(),
+    id:         uid(),
     name,
-    client: document.getElementById('newCaseClient').value.trim(),
-    number: document.getElementById('newCaseNumber').value.trim(),
+    client:     document.getElementById('newCaseClient').value.trim(),
+    number:     document.getElementById('newCaseNumber').value.trim(),
+    matterType: document.getElementById('newCaseMatterType').value.trim(),
+    doi:        document.getElementById('newCaseDoi').value,
+    summary:    document.getElementById('newCaseSummary').value.trim(),
   };
   state.cases.push(c);
   save();
   populateCaseSelect();
   document.getElementById('caseSelect').value = c.id;
   onCaseChange();
-  document.getElementById('newCaseName').value   = '';
-  document.getElementById('newCaseClient').value = '';
-  document.getElementById('newCaseNumber').value = '';
+  document.getElementById('newCaseName').value       = '';
+  document.getElementById('newCaseClient').value     = '';
+  document.getElementById('newCaseNumber').value     = '';
+  document.getElementById('newCaseMatterType').value = '';
+  document.getElementById('newCaseDoi').value        = '';
+  document.getElementById('newCaseSummary').value    = '';
   renderCaseList();
 }
 
@@ -839,6 +907,105 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
+// ── Case Summary ─────────────────────────────────────────────────────────────
+function updateCaseSummary() {
+  const c = currentCase();
+  const section = document.getElementById('caseSummarySection');
+  if (!c || !c.summary) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+  document.getElementById('sumClient').textContent = c.client || '—';
+  document.getElementById('sumNumber').textContent = c.number || '—';
+
+  const mtWrap = document.getElementById('sumMatterTypeWrap');
+  if (c.matterType) {
+    mtWrap.style.display = 'inline';
+    document.getElementById('sumMatterType').textContent = c.matterType;
+  } else {
+    mtWrap.style.display = 'none';
+  }
+
+  const doiWrap = document.getElementById('sumDoiWrap');
+  if (c.doi) {
+    doiWrap.style.display = 'inline';
+    document.getElementById('sumDoi').textContent = fmtDate(c.doi);
+  } else {
+    doiWrap.style.display = 'none';
+  }
+
+  document.getElementById('caseSummaryText').textContent = c.summary;
+}
+
+// ── Export Word ───────────────────────────────────────────────────────────────
+function exportWord() {
+  if (typeof htmlDocx === 'undefined') {
+    alert('Word export library not loaded. Please check your internet connection and try again.');
+    return;
+  }
+  const c = currentCase();
+  const rows = sorted(getFiltered());
+
+  const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  const tableRows = rows.map(e => `
+    <tr>
+      <td style="padding:6px 8px;border:1px solid #d1d5db;vertical-align:top;white-space:nowrap;font-weight:600;color:#1a2744">
+        ${esc(fmtDate(e.date))}${e.time ? '<br><span style="font-weight:normal;color:#6b7280;font-size:10pt">'+esc(fmtTime(e.time))+'</span>' : ''}
+      </td>
+      <td style="padding:6px 8px;border:1px solid #d1d5db;vertical-align:top;font-size:10pt">${esc(e.parties || '—')}</td>
+      <td style="padding:6px 8px;border:1px solid #d1d5db;vertical-align:top">${esc(e.description).replace(/\n/g,'<br>')}</td>
+      <td style="padding:6px 8px;border:1px solid #d1d5db;vertical-align:top;font-size:10pt;color:#2563eb">${esc(e.source || '—')}</td>
+    </tr>`).join('');
+
+  const metaRows = [
+    ['Client',        c.client],
+    ['File Reference',c.number],
+    ['Matter Type',   c.matterType],
+    ['DOI/DOA',       c.doi ? fmtDate(c.doi) : null],
+  ].filter(([,v]) => v).map(([k,v]) =>
+    `<tr><td style="font-weight:600;padding:3px 20px 3px 0;color:#1a2744;white-space:nowrap">${k}:</td><td style="padding:3px 0">${esc(v)}</td></tr>`
+  ).join('');
+
+  const summarySection = c.summary ? `
+    <h2 style="color:#1a2744;font-size:14pt;margin-top:22pt;margin-bottom:6pt;border-bottom:2pt solid #c8a84b;padding-bottom:4pt">Injuries &amp; Treatment Overview</h2>
+    <p style="line-height:1.65;font-size:11pt">${esc(c.summary).replace(/\n/g,'<br>')}</p>` : '';
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;font-size:11pt;margin:0;padding:0">
+  <h1 style="color:#1a2744;font-size:18pt;margin-bottom:4pt">File Note – Master Chronology</h1>
+  <p style="color:#6b7280;font-size:10pt;margin-bottom:0">${esc(c.name)}</p>
+  <hr style="border:none;border-top:2pt solid #c8a84b;margin:10pt 0 14pt">
+  <h2 style="color:#1a2744;font-size:13pt;margin-bottom:6pt">Matter Information</h2>
+  <table><tbody>${metaRows}</tbody></table>
+  ${summarySection}
+  <h2 style="color:#1a2744;font-size:13pt;margin-top:22pt;margin-bottom:6pt;border-bottom:2pt solid #c8a84b;padding-bottom:4pt">Case Chronology</h2>
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="background-color:#1a2744">
+        <th style="padding:8px;border:1px solid #1a2744;text-align:left;color:white;white-space:nowrap">DATE</th>
+        <th style="padding:8px;border:1px solid #1a2744;text-align:left;color:white">PROVIDER</th>
+        <th style="padding:8px;border:1px solid #1a2744;text-align:left;color:white">EVENT</th>
+        <th style="padding:8px;border:1px solid #1a2744;text-align:left;color:white">CITATIONS</th>
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+  <p style="margin-top:20pt;font-size:9pt;color:#9ca3af">Generated: ${new Date().toLocaleString()}</p>
+</body></html>`;
+
+  const blob = htmlDocx.asBlob(html);
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href: url,
+    download: `${(c.name||'case').replace(/[^a-zA-Z0-9]+/g,'-')}-chronology.docx`
+  });
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -851,6 +1018,7 @@ document.addEventListener('keydown', e => {
 // ── Init ──────────────────────────────────────────────────────────────────────
 populateCaseSelect();
 renderTable();
+updateCaseSummary();
 </script>
 </body>
 </html>
